@@ -1,0 +1,22 @@
+.App {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 16px;
+    padding-bottom: 24px;
+  }
+  
+  .img{
+      object-fit: cover;
+  }
+  
+  .loader{
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  }
+  
+  .buttonContainer{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+  }
