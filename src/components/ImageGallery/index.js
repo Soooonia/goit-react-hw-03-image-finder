@@ -1,1 +1,1 @@
-export {default} from "./ImageGalleryItem/ImageGallery"
+export {default} from "./ImageGallery"

@@ -2,34 +2,34 @@ import { Component } from 'react';
 import PropTypes from 'prop-types';
 import css from "./Searchbar.module.css";
 
-
 class Searchbar extends Component{
-    state = {
-      value: '',
-    };
-  
-    onSubmit = (e) => {
-      e.preventDefault();
-      if (this.state.value === "") {
-        return alert("Input field is empty!");
-      }
-      this.props.onChange(this.state.value);
-      this.setState({ value: "" });
+  state = {
+    value: '',
+  };
+
+  onSubmit = (e) => {
+    e.preventDefault();
+    if (this.state.value === "") {
+      return alert("Input field is empty!");
     }
-  
-    handleChange = e => {
-      this.setState({value: e.currentTarget.value})
-    };
+    this.props.onChange(this.state.value);
+    this.setState({ value: "" });
+  }
 
-    render(){
-        return (
-            <header className= {css.searchbar}>
-  <form className={css.SearchForm} onSubmit={this.onSubmit}>
-    <button type="submit" classNameme={css.SearchFormButton}>
-      <span className={css.SearchFormButtonLabel}>Search</span>
-    </button>
+  handleChange = e => {
+    this.setState({value: e.currentTarget.value})
+  };
 
-    <input
+
+  render() {
+    return (
+      <header className={css.Searchbar}>
+        <form className={css.SearchForm} onSubmit={this.onSubmit}>
+          <button type="submit" className={css.SearchFormButton}>
+            <span className={css.SearchFormButtonLabel}>Search</span>
+          </button>
+
+          <input
             onChange={this.handleChange}
             className={css.SearchFormInput}
             type="text"
