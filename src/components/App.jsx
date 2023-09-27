@@ -1,103 +1,93 @@
+import React from 'react';
 import { Component } from 'react';
-import Searchbar from './Searchbar';
-import ImageGallery from "./ImageGallery"
-import Button from './Button';
-import SearchApi from "./SearchApi"
-import Loader from './Loader/Loader';
-import Modal from './Modal';
-import css from "./App.module.css";
-
-
-class App extends Component {
+import { ToastContainer } from 'react-toastify';
+import Searchbar from './Searchbar/searchbar';
+import api from './service-api/pixabay-api';
+import { toast } from 'react-toastify';
+import ImageGallery from './ImageGallery/imageGallery';
+import Button from './Button/button';
+import Loader from './Loader/loader';
+import Modal from './Modal/modal';
+export class App extends Component {
   state = {
-    value: null,
-    page: 1,
-    gallery: [],
-    status: 'allow',
+    searchQuery: '',
+    results: null,
+    error: null,
+    page: 0,
+    showLoadMore: false,
+    showLoader: false,
     showModal: false,
-    largeImage:"",
-  };
+    selectedImage: null,
+    galleryRef: React.createRef(),
+  }// we got state 'searchQuery' from 'searchbar.js' (searchQueryOriginal=searchQuery)
 
-  componentDidUpdate(prevProps, prevState) {
-    const { status, value, page } = this.state;
+  async componentDidUpdate(prevProps, prevState) {
+    const prevQuery = prevState.searchQuery;
+    const nextQuery = this.state.searchQuery;
+    const prevPage = prevState.page;
+    const nextPage = this.state.page;
 
-    if (status === 'allow') {
-      this.setState({ status: 'loading' });
-      SearchApi(value, page)
-        .then(response => response.json())
-        .then(ar =>
-          this.setState(
-            ({ gallery }) => ({
-              gallery: [...gallery, ...ar.hits],
-              status: 'deny',
-            }),
-            this.alertEmptyArray(ar.hits.length)
-          )
-        );
+    if (prevQuery !== nextQuery || prevPage !== nextPage) {
+      this.setState({ showLoader: true, error: null });
+      try {
+        const data = await api.fetchImages(nextQuery, nextPage);
+        const totalPage = Math.ceil(data.totalHits / 12)
+        this.setState({
+          results: [...this.state.results, ...data.hits],
+          showLoadMore: data.totalHits > 12 * nextPage
+        });
+        !data.totalHits && toast.error("No results found. Please try again!");
+        nextPage >= totalPage && toast.warning("We're sorry, but you've reached the end of search results!");
+      } catch (error) {
+        this.setState({ error });
+      } finally {
+        this.setState({ showLoader: false })
+      }
     }
   }
-
-  alertEmptyArray = (value) => {
-    if (!value) {
-      return alert ("Ooops there is no images, try another search!")
+  onFormSubmit = searchQueryOriginal => {
+    this.setState({ searchQuery: searchQueryOriginal, page: 1, results: [] });
+  }
+  onLoadMore = () => {
+    if (this.state.results) {
+      this.setState(prevState => ({ page: prevState.page + 1 }));
     }
   }
-
-  openModal = (img) => {
-    this.setState({ showModal: true });
-    this.setState({largeImage:img})
-  };
-
-  closeModal = () => {
-    this.setState({ showModal:false });
-  }
-
-  onSubmit = name => {
-    if (name === this.state.value) {
-      return alert('Try another input value!');
+  handleKeydown = e => {
+    if (e.code === 'Escape') {
+      this.setState({ showModal: false, selectedImage: null });
     }
-    this.setState({ value: name, page: 1, gallery: [], status: 'allow' });
   };
-
-  onMore = () => {
-    this.setState(prevSatate => ({
-      page: prevSatate.page + 1,
-      status: 'allow',
-    }));
+  handleBackdropClick = e => {
+    if (e.target === e.currentTarget) {
+      this.setState({ showModal: false, selectedImage: null });
+    }
   };
+  onOpenModal = imageId => {
+    const { results } = this.state;
+    const selectedImage = results.find(image => image.id === imageId);
+    this.setState({ selectedImage: selectedImage, showModal: true });
+  }; // we got'imageId' from callback 'onOpenModal(imageId)' from 'imageGalleryItem.js'
 
   render() {
-    const { gallery, status, showModal } = this.state;
+    const { results, showLoadMore, showLoader, showModal, selectedImage, searchQuery } = this.state;
     return (
-      <section>
-        <div className={css.App}>
-          <Searchbar onChange={this.onSubmit} />
-          <ImageGallery gallery={gallery} openModal={this.openModal} />
-          {gallery.length > 0 && (
-            <div className={css.buttonContainer}>
-              <Button onMore={this.onMore} />
-            </div>
-          )}
-          {status === 'loading' && (
-            <div className={css.loader}>
-              <Loader />
-            </div>
-          )}
-          {showModal && (
-            <Modal onClose={this.closeModal}>
-              <img
-                className={css.img}
-                src={this.state.largeImage}
-                width="900"
-                alt=""
-              />
-            </Modal>
-          )}
-        </div>
-      </section>
+      <div className='App'>
+        <ToastContainer autoClose={5000} pauseOnHover theme="colored" />
+        <Searchbar onSubmit={this.onFormSubmit} />
+        {searchQuery === '' && <h2 className='empty'>Please enter a query to search for images!</h2>}
+        {results && <ImageGallery arrayResults={results} key={results.id} onOpenModal={this.onOpenModal} />}
+        {showLoadMore && <Button handleClick={this.onLoadMore}><span>Load More</span></Button>}
+        {showLoader && <Loader />}
+        {showModal && (
+          <Modal
+            onBackdropClose={this.handleBackdropClick}
+            onKeydownClose={this.handleKeydown}
+          >
+            <img src={selectedImage.largeImageURL} alt="imageSearch" />
+          </Modal>
+        )}
+      </div>
     );
   }
-}
-
-
-export default App;
+};
