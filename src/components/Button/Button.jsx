@@ -14,4 +14,3 @@ export default Button;
 Button.propTypes = {
   onMore:PropTypes.func.isRequired,
 }
-

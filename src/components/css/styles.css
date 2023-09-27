@@ -105,8 +105,18 @@ img {
  * Стили компонента ImageGallery
  */
 
+/*
+ * Стили компонента ImageGalleryItem
+ */
 
 
+/*
+ * Стили компонента Modal
+ */
+
+.Overlay {
+
+}
 
 .Modal {
   max-width: calc(100vw - 48px);
